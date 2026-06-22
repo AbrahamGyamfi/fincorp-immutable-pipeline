@@ -1,8 +1,25 @@
-# GHSA-3xgq-45jj-v275 / CVE-2024-21538 — cross-spawn ReDoS
-# Location: usr/local/lib/node_modules/npm/node_modules/cross-spawn
-# This package is bundled inside npm (the package manager) which ships inside
-# node:20-alpine. npm is not exposed as a network service and is not in the
-# application's runtime path. The app runs as non-root user 'fincorp' with
-# no npm access. Risk: none to deployed application.
+# All entries below are in npm's internal dependencies bundled inside node:20-alpine
+# (usr/local/lib/node_modules/npm/...). npm is the package manager — it is not
+# exposed as a network service and is not on the application's runtime path.
+# The app runs as non-root user 'fincorp' executing: node src/server.js
+# None of these affect the running application surface.
+
+# cross-spawn@7.0.3 — ReDoS (GHSA-3xgq-45jj-v275)
 GHSA-3xgq-45jj-v275
 CVE-2024-21538
+
+# glob@10.4.2 — Command Injection via malicious filenames
+CVE-2025-64756
+
+# minimatch@9.0.5 — DoS via crafted glob patterns
+CVE-2026-26996
+CVE-2026-27903
+CVE-2026-27904
+
+# tar@6.2.1 — path traversal / file overwrite (multiple)
+CVE-2026-23745
+CVE-2026-23950
+CVE-2026-24842
+CVE-2026-26960
+CVE-2026-29786
+CVE-2026-31802
