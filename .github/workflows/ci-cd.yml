@@ -51,11 +51,12 @@ jobs:
         uses: github/codeql-action/init@v3
         with:
           languages: javascript
+          build-mode: none
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
         with:
-          category: codeql-javascript
+          category: /language:javascript
 
   # ─────────────────────────────────────────────────────────────────────────────
   # Job 3: Dependency review — flag new CVEs introduced in PRs
