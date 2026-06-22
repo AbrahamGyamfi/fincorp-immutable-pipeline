@@ -1,0 +1,30 @@
+# Copy this file to terraform.tfvars and fill in your values.
+# terraform.tfvars is git-ignored — never commit it.
+
+# ── Identity ──────────────────────────────────────────────────────────────────
+# Must match PROJECT_NAME used in 00-bootstrap-tf-backend.sh.
+project_name = "fincorp"
+environment  = "production"
+
+# ── Regions ───────────────────────────────────────────────────────────────────
+primary_region = "us-east-1"
+dr_region      = "us-west-2"
+
+# ── GitHub OIDC ───────────────────────────────────────────────────────────────
+github_org  = "your-github-username-or-org"
+github_repo = "fincorp-immutable-pipeline"
+
+# ── Database ──────────────────────────────────────────────────────────────────
+db_username = "fincorp_admin"
+db_password = "change-me-strong-password-here!"   # minimum 16 characters
+
+# ── Optional overrides (defaults are fine for most deployments) ───────────────
+# db_instance_class        = "db.t3.medium"
+# db_allocated_storage_gb  = 100
+# db_engine_version        = "15.4"
+# primary_vpc_cidr         = "10.0.0.0/16"
+# dr_vpc_cidr              = "10.1.0.0/16"
+# ecr_repository_name      = "fincorp-api"
+# ecr_max_tagged_images    = 50
+# backup_retention_days    = 30
+# backup_dr_retention_days = 90
