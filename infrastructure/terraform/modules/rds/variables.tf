@@ -49,3 +49,21 @@ variable "backup_retention_days" {
   description = "Days to retain automated RDS point-in-time backups"
   type        = number
 }
+
+variable "multi_az" {
+  description = "Enable Multi-AZ deployment (required for production HA; disable to save cost during testing)"
+  type        = bool
+  default     = false
+}
+
+variable "performance_insights_enabled" {
+  description = "Enable Performance Insights (not supported on db.t3.micro)"
+  type        = bool
+  default     = false
+}
+
+variable "skip_final_snapshot" {
+  description = "Skip final snapshot on deletion (set true for testing to avoid blocking deletes)"
+  type        = bool
+  default     = true
+}

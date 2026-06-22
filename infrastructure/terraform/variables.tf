@@ -81,25 +81,37 @@ variable "db_name" {
 variable "db_engine_version" {
   description = "PostgreSQL engine version"
   type        = string
-  default     = "15.4"
+  default     = "15.18"
 }
 
 variable "db_instance_class" {
   description = "RDS instance class"
   type        = string
-  default     = "db.t3.medium"
+  default     = "db.t3.micro"
 }
 
 variable "db_allocated_storage_gb" {
   description = "Initial allocated storage in GB"
   type        = number
-  default     = 100
+  default     = 20
 }
 
 variable "db_backup_retention_days" {
   description = "Days to retain automated RDS point-in-time backups"
   type        = number
-  default     = 7
+  default     = 1
+}
+
+variable "db_multi_az" {
+  description = "Enable RDS Multi-AZ (set true for production; false saves ~$80/month during testing)"
+  type        = bool
+  default     = false
+}
+
+variable "db_performance_insights" {
+  description = "Enable RDS Performance Insights (not supported on db.t3.micro)"
+  type        = bool
+  default     = false
 }
 
 # ── ECR ───────────────────────────────────────────────────────────────────────

@@ -92,16 +92,18 @@ module "ecr" {
 module "rds" {
   source = "./modules/rds"
 
-  name_prefix            = local.name_prefix
-  engine_version         = var.db_engine_version
-  instance_class         = var.db_instance_class
-  allocated_storage_gb   = var.db_allocated_storage_gb
-  db_name                = var.db_name
-  db_username            = var.db_username
-  db_password            = var.db_password
-  db_subnet_group_name   = module.networking.db_subnet_group_name
-  vpc_security_group_ids = [module.networking.rds_sg_id]
-  backup_retention_days  = var.db_backup_retention_days
+  name_prefix                  = local.name_prefix
+  engine_version               = var.db_engine_version
+  instance_class               = var.db_instance_class
+  allocated_storage_gb         = var.db_allocated_storage_gb
+  db_name                      = var.db_name
+  db_username                  = var.db_username
+  db_password                  = var.db_password
+  db_subnet_group_name         = module.networking.db_subnet_group_name
+  vpc_security_group_ids       = [module.networking.rds_sg_id]
+  backup_retention_days        = var.db_backup_retention_days
+  multi_az                     = var.db_multi_az
+  performance_insights_enabled = var.db_performance_insights
 
   providers = {
     aws.primary = aws

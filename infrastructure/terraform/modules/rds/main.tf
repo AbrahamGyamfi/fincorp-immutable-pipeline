@@ -40,7 +40,7 @@ resource "aws_db_instance" "primary" {
   db_subnet_group_name   = var.db_subnet_group_name
   vpc_security_group_ids = var.vpc_security_group_ids
 
-  multi_az            = true
+  multi_az            = var.multi_az
   publicly_accessible = false
   deletion_protection = true
 
@@ -49,9 +49,9 @@ resource "aws_db_instance" "primary" {
   maintenance_window      = "Mon:04:00-Mon:05:00"
 
   enabled_cloudwatch_logs_exports = ["postgresql", "upgrade"]
-  performance_insights_enabled    = true
+  performance_insights_enabled    = var.performance_insights_enabled
 
-  skip_final_snapshot       = false
+  skip_final_snapshot       = var.skip_final_snapshot
   final_snapshot_identifier = "${var.name_prefix}-primary-final-snapshot"
 
   tags = { Name = "${var.name_prefix}-primary-db" }
