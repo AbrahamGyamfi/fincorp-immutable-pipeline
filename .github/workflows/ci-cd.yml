@@ -372,6 +372,16 @@ jobs:
       - name: Promote to :stable
         run: |
           REGISTRY="${{ needs.push-and-gate.outputs.registry }}"
+
+          # With immutable ECR tags, :stable cannot be overwritten — delete the
+          # existing pointer first so the new SHA can claim the :stable tag.
+          # SHA-tagged images are untouched; only the pointer is replaced.
+          aws ecr batch-delete-image \
+            --repository-name "${{ env.ECR_REPOSITORY }}" \
+            --image-ids imageTag=stable \
+            --region "${{ env.AWS_REGION }}" \
+            --output text || true   # no-op if :stable does not yet exist
+
           docker pull "$REGISTRY/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}"
           docker tag  "$REGISTRY/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}" \
                       "$REGISTRY/${{ env.ECR_REPOSITORY }}:stable"
