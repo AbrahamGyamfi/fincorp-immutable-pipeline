@@ -2,38 +2,38 @@ const REF_BLOCKS = [
   {
     head: 'GitHub Secrets',
     rows: [
-      { key: 'AWS_ROLE_ARN',    val: 'IAM role for OIDC — no static keys' },
-      { key: 'AWS_ACCOUNT_ID',  val: '12-digit account ID' },
+      { label: 'AWS_ROLE_ARN',    desc: 'IAM role for OIDC — no static keys' },
+      { label: 'AWS_ACCOUNT_ID',  desc: '12-digit account ID' },
     ],
   },
   {
     head: 'Key Files',
     rows: [
-      { key: '.github/workflows/ci-cd.yml',  val: 'Pipeline definition' },
-      { key: 'infrastructure/terraform/',    val: 'ECR · CodeArtifact · RDS · Backup' },
-      { key: 'infrastructure/scripts/',      val: '01 setup · 02 simulate · 03 restore' },
-      { key: 'app/Dockerfile',               val: 'Multi-stage · Alpine · non-root' },
+      { label: '.github/workflows/ci-cd.yml',  desc: 'Pipeline definition' },
+      { label: 'infrastructure/terraform/',    desc: 'ECR · CodeArtifact · RDS · Backup' },
+      { label: 'infrastructure/scripts/',      desc: '01 setup · 02 simulate · 03 restore' },
+      { label: 'app/Dockerfile',               desc: 'Multi-stage · Alpine · non-root' },
     ],
   },
   {
     head: 'Terraform Resources',
     rows: [
-      { key: 'aws_ecr_repository',                    val: 'IMMUTABLE + KMS + scan_on_push' },
-      { key: 'aws_codeartifact_domain',               val: 'npm + PyPI proxy · KMS encrypted' },
-      { key: 'aws_db_instance',                       val: 'Multi-AZ · pg15 · deletion_protection' },
-      { key: 'aws_backup_plan',                       val: 'Daily + cross-region copy to us-west-2' },
-      { key: 'aws_backup_vault_lock_configuration',   val: 'Governance WORM lock' },
-      { key: 'aws_iam_role (OIDC)',                   val: 'GitHub Actions · no static credentials' },
+      { label: 'aws_ecr_repository',                    desc: 'IMMUTABLE + KMS + scan_on_push' },
+      { label: 'aws_codeartifact_domain',               desc: 'npm + PyPI proxy · KMS encrypted' },
+      { label: 'aws_db_instance',                       desc: 'Multi-AZ · pg15 · deletion_protection' },
+      { label: 'aws_backup_plan',                       desc: 'Daily + cross-region copy to eu-central-1' },
+      { label: 'aws_backup_vault_lock_configuration',   desc: 'Governance WORM lock' },
+      { label: 'aws_iam_role (OIDC)',                   desc: 'GitHub Actions · no static credentials' },
     ],
   },
   {
     head: 'Quick Start',
     rows: [
-      { key: 'terraform apply',                 val: 'Provision all infrastructure' },
-      { key: '01-setup-codeartifact.sh',        val: 'Authenticate npm + pip locally' },
-      { key: 'git push origin main',            val: 'Trigger the pipeline' },
-      { key: '02-simulate-region-failure.sh',   val: 'Delete primary — DR test begins' },
-      { key: '03-restore-dr.sh',                val: 'Restore in us-west-2 · clock runs' },
+      { label: 'terraform apply',                 desc: 'Provision all infrastructure' },
+      { label: '01-setup-codeartifact.sh',        desc: 'Authenticate npm + pip locally' },
+      { label: 'git push origin main',            desc: 'Trigger the pipeline' },
+      { label: '02-simulate-region-failure.sh',   desc: 'Delete primary — DR test begins' },
+      { label: '03-restore-dr.sh',                desc: 'Restore in eu-central-1 · clock runs' },
     ],
   },
 ]
@@ -56,10 +56,10 @@ export default function ReferenceSection() {
             <div key={head} className="ref-block">
               <div className="ref-block-head">{head}</div>
               <ul className="ref-rows">
-                {rows.map(({ key, val }) => (
-                  <li key={key} className="ref-row">
-                    <span className="ref-key">{key}</span>
-                    <span className="ref-val">{val}</span>
+                {rows.map(({ label, desc }) => (
+                  <li key={label} className="ref-row">
+                    <span className="ref-key">{label}</span>
+                    <span className="ref-val">{desc}</span>
                   </li>
                 ))}
               </ul>
