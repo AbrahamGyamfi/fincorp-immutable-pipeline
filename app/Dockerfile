@@ -1,5 +1,6 @@
 # ── Stage 1: Build React dashboard ───────────────────────────────────────────
-FROM node:18-alpine AS client-build
+FROM node:20-alpine AS client-build
+
 
 WORKDIR /build
 
@@ -12,12 +13,9 @@ RUN npm run build
 
 
 # ── Stage 2: Production server ────────────────────────────────────────────────
-# node:18-alpine is kept for healthcheck compatibility; hardened below.
-# In ECS, combine with:
-#   readonlyRootFilesystem: true
-#   noNewPrivileges: true
-#   drop all Linux capabilities (add only NET_BIND_SERVICE if port < 1024)
-FROM node:18-alpine AS final
+# In ECS/EC2, combine with:
+#   readonlyRootFilesystem: true  noNewPrivileges: true
+FROM node:20-alpine AS final
 
 # Apply OS-level security patches available at build time
 RUN apk --no-cache upgrade

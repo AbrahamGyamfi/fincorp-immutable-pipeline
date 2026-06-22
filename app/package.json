@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "test": "jest --coverage",
+    "test": "jest --coverage --forceExit",
     "build:client": "cd client && npm ci && npm run build"
   },
   "dependencies": {
@@ -24,6 +24,6 @@
     "supertest": "^6.3.4"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0"
   }
 }
