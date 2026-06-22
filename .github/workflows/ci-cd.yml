@@ -170,11 +170,13 @@ jobs:
             --format table \
             fincorp-api:scan || true
 
-      # Generate SARIF for GitHub Security tab (always, even if gate fails)
+      # Generate SARIF for GitHub Security tab — HIGH/CRITICAL only so Medium/Low
+      # npm-internal findings don't pollute the Security alerts dashboard.
       - name: Generate Trivy SARIF
         run: |
           trivy image \
             --scanners vuln \
+            --severity CRITICAL,HIGH \
             --ignorefile .trivyignore \
             --format sarif \
             --output trivy-results.sarif \

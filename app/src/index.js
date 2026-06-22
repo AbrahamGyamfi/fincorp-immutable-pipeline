@@ -1,7 +1,9 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100, standardHeaders: true, legacyHeaders: false }));
 app.use(express.json());
 
 app.get('/health', (req, res) => {
