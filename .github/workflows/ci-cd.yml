@@ -154,9 +154,10 @@ jobs:
         run: docker build -t fincorp-api:scan .
 
       - name: Install Trivy
-        uses: aquasecurity/setup-trivy@v0.2.3
-        with:
-          version: v0.71.0
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh \
+            | sudo sh -s -- -b /usr/local/bin
+          trivy --version
 
       # Show ALL fixable HIGH/CRITICAL CVEs in the log — always runs so we can read the table
       - name: Show Trivy findings (table)
