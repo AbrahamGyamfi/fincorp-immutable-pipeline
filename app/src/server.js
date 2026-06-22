@@ -1,5 +1,6 @@
 require('dotenv').config()
 const express = require('express')
+const rateLimit = require('express-rate-limit')
 const cors = require('cors')
 const path = require('path')
 
@@ -11,6 +12,12 @@ const drRouter       = require('./routes/dr')
 const app  = express()
 const PORT = process.env.PORT || 3000
 
+app.use(rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+}))
 app.use(express.json())
 app.use(cors())
 

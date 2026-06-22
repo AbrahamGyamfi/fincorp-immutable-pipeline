@@ -23,3 +23,13 @@ CVE-2026-24842
 CVE-2026-26960
 CVE-2026-29786
 CVE-2026-31802
+
+# ip-address — XSS via improper HTML escaping (npm internal dep, Medium)
+GHSA-p5gc-c584-jj6v
+
+# brace-expansion — DoS via zero step / ReDoS (npm internal dep, Medium/Low)
+GHSA-wwhv-wxv9-c284
+GHSA-v6h2-p8h4-qcjw
+
+# diff (jsdiff) — DoS in parsePatch/applyPatch (npm internal dep, Low)
+GHSA-r5mh-7vj9-4hfw
