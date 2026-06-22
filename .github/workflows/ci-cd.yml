@@ -166,6 +166,7 @@ jobs:
             --scanners vuln \
             --severity CRITICAL,HIGH \
             --ignore-unfixed \
+            --ignorefile .trivyignore \
             --format table \
             fincorp-api:scan || true
 
@@ -174,6 +175,7 @@ jobs:
         run: |
           trivy image \
             --scanners vuln \
+            --ignorefile .trivyignore \
             --format sarif \
             --output trivy-results.sarif \
             fincorp-api:scan || true
@@ -192,6 +194,7 @@ jobs:
             --scanners vuln \
             --severity CRITICAL,HIGH \
             --ignore-unfixed \
+            --ignorefile .trivyignore \
             --exit-code 1 \
             --format table \
             fincorp-api:scan
@@ -200,6 +203,7 @@ jobs:
         run: |
           trivy image \
             --scanners vuln \
+            --ignorefile .trivyignore \
             --format cyclonedx \
             --output sbom.cdx.json \
             fincorp-api:scan || true
