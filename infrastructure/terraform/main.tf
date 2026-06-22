@@ -133,6 +133,30 @@ module "backup" {
   depends_on = [module.rds]
 }
 
+# ── EC2 App Instance ──────────────────────────────────────────────────────────
+
+module "ec2" {
+  source = "./modules/ec2"
+
+  name_prefix               = local.name_prefix
+  vpc_id                    = module.networking.vpc_id
+  public_subnet_id          = module.networking.public_subnet_id
+  aws_region                = var.region
+  dr_region                 = var.dr_region
+  ecr_registry              = "${local.account_id}.dkr.ecr.${var.region}.amazonaws.com"
+  ecr_repository            = var.ecr_repository_name
+  database_url              = "postgres://${var.db_username}:${var.db_password}@${module.rds.endpoint}/${var.db_name}"
+  primary_db_id             = "${local.name_prefix}-primary"
+  codeartifact_domain       = local.name_prefix
+  codeartifact_domain_owner = local.account_id
+
+  providers = {
+    aws.primary = aws
+  }
+
+  depends_on = [module.networking, module.rds]
+}
+
 # ── CodeArtifact ──────────────────────────────────────────────────────────────
 
 module "codeartifact" {

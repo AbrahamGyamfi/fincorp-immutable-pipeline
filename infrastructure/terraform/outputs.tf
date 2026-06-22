@@ -63,3 +63,15 @@ output "app_role_arn" {
   description = "App IAM role ARN — attach to ECS task definition"
   value       = module.iam.app_role_arn
 }
+
+# ── EC2 ───────────────────────────────────────────────────────────────────────
+
+output "app_url" {
+  description = "Dashboard URL — open in browser after terraform apply"
+  value       = module.ec2.app_url
+}
+
+output "ec2_instance_id" {
+  description = "EC2 instance ID"
+  value       = module.ec2.instance_id
+}
