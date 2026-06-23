@@ -80,6 +80,7 @@ resource "aws_ecr_repository_policy" "this" {
           "ecr:CompleteLayerUpload",
           "ecr:DescribeImages",
           "ecr:DescribeImageScanFindings",
+          "ecr:BatchDeleteImage",
         ]
       },
       {
@@ -125,6 +126,7 @@ resource "aws_iam_role_policy" "github_actions_ecr" {
           "ecr:CompleteLayerUpload",
           "ecr:DescribeImages",
           "ecr:DescribeImageScanFindings",
+          "ecr:BatchDeleteImage",
         ]
         Resource = aws_ecr_repository.this.arn
       }
