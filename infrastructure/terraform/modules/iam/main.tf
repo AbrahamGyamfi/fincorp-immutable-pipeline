@@ -63,6 +63,15 @@ resource "aws_iam_role_policy" "github_actions_ssm_deploy" {
         Resource = "*"
       },
       {
+        Sid    = "SSMTrigger"
+        Effect = "Allow"
+        Action = [
+          "ssm:PutParameter",
+          "ssm:GetParameter",
+        ]
+        Resource = "arn:aws:ssm:*:*:parameter/fincorp/*"
+      },
+      {
         Sid    = "EC2Describe"
         Effect = "Allow"
         Action = ["ec2:DescribeInstances"]

@@ -2,46 +2,92 @@
 exec > /var/log/user-data.log 2>&1
 echo "=== FinCorp App Bootstrap $(date) ==="
 
-# Ensure SSM agent is running (pre-installed on AL2023)
-systemctl enable amazon-ssm-agent
-systemctl start amazon-ssm-agent
-
-# Install Docker with retries
+# Install Docker
 for i in 1 2 3; do
   dnf install -y docker && break
   echo "dnf attempt $i failed, retrying..."
   sleep 15
 done
-
 systemctl enable docker
 systemctl start docker
 usermod -aG docker ec2-user
 
-# Authenticate to ECR — retry until instance IAM credentials are available
+REGISTRY="${ecr_registry}"
+REPO="${ecr_repository}"
+IMAGE="$REGISTRY/$REPO:stable"
+
+mkdir -p /var/lib/fincorp
+
+# ECR login helper
+cat > /usr/local/bin/ecr-login.sh << 'EOF'
+#!/bin/bash
+aws ecr get-login-password --region ${aws_region} | \
+  docker login --username AWS --password-stdin ${ecr_registry}
+EOF
+chmod +x /usr/local/bin/ecr-login.sh
+
+# Deploy script — triggered by SSM parameter written by CI/CD pipeline.
+# Cron runs every minute to check; actual docker pull only happens when
+# /fincorp/deploy-trigger SHA differs from last deployed SHA.
+cat > /usr/local/bin/fincorp-deploy.sh << 'EOF'
+#!/bin/bash
+LOG=/var/log/fincorp-deploy.log
+LAST_SHA_FILE=/var/lib/fincorp/last-deployed-sha
+REGISTRY="${ecr_registry}"
+IMAGE="$REGISTRY/${ecr_repository}:stable"
+
+# Read deploy trigger written by pipeline sign-and-promote job
+TRIGGER_SHA=$(aws ssm get-parameter \
+  --name /fincorp/deploy-trigger \
+  --region ${aws_region} \
+  --query Parameter.Value \
+  --output text 2>/dev/null || echo "")
+
+LAST_SHA=$(cat "$LAST_SHA_FILE" 2>/dev/null || echo "")
+
+if [ -z "$TRIGGER_SHA" ] || [ "$TRIGGER_SHA" = "$LAST_SHA" ]; then
+  exit 0
+fi
+
+echo "$(date): new deploy trigger $TRIGGER_SHA (was: $LAST_SHA)" >> $LOG
+
+/usr/local/bin/ecr-login.sh >> $LOG 2>&1 || exit 0
+
+PULL=$(docker pull "$IMAGE" 2>&1)
+echo "$(date): $PULL" >> $LOG
+
+ENV=$(docker inspect fincorp-api \
+      -f '{{range .Config.Env}}-e "{{.}}" {{end}}' 2>/dev/null || echo "")
+docker stop  fincorp-api 2>/dev/null || true
+docker rm    fincorp-api 2>/dev/null || true
+eval docker run -d --name fincorp-api --restart always \
+  -p 3000:3000 $ENV "$IMAGE" >> $LOG 2>&1
+
+echo "$TRIGGER_SHA" > "$LAST_SHA_FILE"
+echo "$(date): deployed $TRIGGER_SHA" >> $LOG
+EOF
+chmod +x /usr/local/bin/fincorp-deploy.sh
+
+# Cron: poll SSM trigger every minute (cheap — only pulls when SHA changes)
+echo "* * * * * root /usr/local/bin/fincorp-deploy.sh" > /etc/cron.d/fincorp-deploy
+
+# Initial boot — pull current :stable if one exists
 for i in $(seq 1 10); do
-  if aws ecr get-login-password --region ${aws_region} | \
-       docker login --username AWS --password-stdin ${ecr_registry}; then
-    echo "ECR login succeeded"
-    break
-  fi
+  /usr/local/bin/ecr-login.sh && break
   echo "ECR login attempt $i/10 failed, retrying in 15s..."
   sleep 15
 done
 
-IMAGE="${ecr_registry}/${ecr_repository}:stable"
-
-# Pull image — retry up to 30 min (pipeline may still be running)
-echo "Waiting for image: $IMAGE"
+echo "Waiting for :stable image..."
 for i in $(seq 1 60); do
   if docker pull "$IMAGE"; then
     echo "Image pulled on attempt $i"
     break
   fi
-  echo "Attempt $i/60: image not ready, retrying in 30s..."
+  echo "Attempt $i/60 — retrying in 30s..."
   sleep 30
 done
 
-# Run the app container (proceed even if pull never succeeded — SSM deploy will fix it)
 docker run -d \
   --name fincorp-api \
   --restart always \
@@ -56,6 +102,6 @@ docker run -d \
   -e DATABASE_URL="${database_url}" \
   -e CODEARTIFACT_DOMAIN=${codeartifact_domain} \
   -e CODEARTIFACT_DOMAIN_OWNER=${codeartifact_domain_owner} \
-  "$IMAGE" || echo "Container start will be retried by SSM deploy job"
+  "$IMAGE" || echo "Initial run failed — cron deploy will retry"
 
 echo "=== Bootstrap complete $(date) ==="
