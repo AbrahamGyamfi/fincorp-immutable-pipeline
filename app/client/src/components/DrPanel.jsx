@@ -36,7 +36,7 @@ export default function DrPanel() {
               </div>
               <div className="dr-kpi">
                 <span className="dr-kpi-value" style={{ color: 'var(--green)', fontSize: '1rem' }}>
-                  {data.last_backup.status}
+                  {data.last_backup?.status ?? '—'}
                 </span>
                 <span className="dr-kpi-label">Last backup</span>
               </div>
@@ -46,11 +46,11 @@ export default function DrPanel() {
               {[
                 { key: 'Primary DB',      val: `${data.primary.identifier} · ${data.primary.status}`, ok: data.primary.status === 'available' },
                 { key: 'Primary region',  val: `${data.primary.region} · Multi-AZ: ${data.primary.multi_az}` },
-                { key: 'Backup vault',    val: data.last_backup.vault },
-                { key: 'Backed up',       val: hoursAgo(data.last_backup.completed_at), ok: true },
-                { key: 'Backup size',     val: `${data.last_backup.size_gb} GB` },
-                { key: 'DR recovery pt',  val: data.recovery_point.region, ok: true },
-                { key: 'DR copy age',     val: `${data.recovery_point.age_hours.toFixed(1)}h`, ok: data.recovery_point.age_hours < data.rpo_hours },
+                { key: 'Backup vault',    val: data.last_backup?.vault ?? '—' },
+                { key: 'Backed up',       val: data.last_backup?.completed_at ? hoursAgo(data.last_backup.completed_at) : 'No backup yet', ok: !!data.last_backup },
+                { key: 'Backup size',     val: data.last_backup ? `${data.last_backup.size_gb} GB` : '—' },
+                { key: 'DR recovery pt',  val: data.recovery_point?.region ?? 'Pending', ok: !!data.recovery_point },
+                { key: 'DR copy age',     val: data.recovery_point ? `${data.recovery_point.age_hours.toFixed(1)}h` : '—', ok: data.recovery_point && data.recovery_point.age_hours < data.rpo_hours },
               ].map(({ key, val, ok }) => (
                 <div key={key} className="dr-detail-row">
                   <span className="dr-detail-key">{key}</span>
