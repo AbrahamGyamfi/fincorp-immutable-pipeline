@@ -45,6 +45,33 @@ resource "aws_iam_role" "github_actions" {
   })
 }
 
+resource "aws_iam_role_policy" "github_actions_ssm_deploy" {
+  provider = aws.primary
+  name     = "ssm-ec2-deploy"
+  role     = aws_iam_role.github_actions.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "SSMSendCommand"
+        Effect = "Allow"
+        Action = [
+          "ssm:SendCommand",
+          "ssm:GetCommandInvocation",
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "EC2Describe"
+        Effect = "Allow"
+        Action = ["ec2:DescribeInstances"]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
 resource "aws_iam_role_policy" "github_actions_codeartifact" {
   provider = aws.primary
   name     = "codeartifact-read"
