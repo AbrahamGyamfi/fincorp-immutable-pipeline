@@ -425,7 +425,7 @@ jobs:
       # Wait up to 3 minutes for the health endpoint to respond.
       - name: Wait for EC2 to serve new image
         run: |
-          APP_URL="http://54.74.221.242:3000/api/health"
+          APP_URL="http://63.35.178.40:3000/api/health"
           echo "Waiting for EC2 to pick up commit ${{ github.sha }}..."
           for i in $(seq 1 12); do
             RESP=$(curl -sf "$APP_URL" 2>/dev/null || echo "{}")

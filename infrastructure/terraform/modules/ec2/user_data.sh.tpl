@@ -99,7 +99,7 @@ docker run -d \
   -e ECR_REGISTRY=${ecr_registry} \
   -e ECR_REPOSITORY=${ecr_repository} \
   -e PRIMARY_DB_ID=${primary_db_id} \
-  -e DATABASE_URL="${database_url}" \
+  -e DATABASE_URL='${database_url}' \
   -e CODEARTIFACT_DOMAIN=${codeartifact_domain} \
   -e CODEARTIFACT_DOMAIN_OWNER=${codeartifact_domain_owner} \
   "$IMAGE" || echo "Initial run failed — cron deploy will retry"
