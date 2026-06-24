@@ -1,9 +1,18 @@
 import { usePolling } from '../hooks/usePolling'
 
+function latencyClass(ms) {
+  if (ms === null || ms === undefined) return 'none'
+  if (ms < 10)  return 'fast'
+  if (ms < 100) return 'mid'
+  return 'slow'
+}
+
 export default function DbPanel() {
   const { data, error, loading } = usePolling('/api/health', 10_000)
 
-  const isOk = data?.db === 'connected'
+  const isOk   = data?.db === 'connected'
+  const latency = isOk ? (data?.latency_ms ?? null) : null
+  const lClass  = latencyClass(latency)
 
   return (
     <section className="panel">
@@ -18,54 +27,50 @@ export default function DbPanel() {
 
       <div className="panel-body">
         {loading && <p className="state-msg">Pinging database…</p>}
-        {error   && (
-          <div className="db-status-row">
-            <span className="db-indicator db-indicator--error" aria-hidden="true" />
-            <span className="db-label">Connection failed</span>
-            <span className="db-value" style={{ color: 'var(--danger)' }}>{error}</span>
-          </div>
-        )}
+        {error   && <p className="state-msg state-msg--error">{error}</p>}
 
         {data && (
           <>
-            <div className="db-status-row">
-              <span
+            <div className="db-hero">
+              <div
                 className={`db-indicator db-indicator--${isOk ? 'ok' : 'error'}`}
                 aria-hidden="true"
               />
-              <span className="db-label">
-                {data.endpoint || 'Endpoint not configured'}
-              </span>
-              <span className={`db-value ${data.latency_ms < 10 ? 'db-value--fast' : data.latency_ms > 100 ? 'db-value--slow' : ''}`}>
-                {isOk ? `${data.latency_ms} ms` : '—'}
+
+              <div className="db-latency">
+                <div className="db-latency-number">
+                  <span className={`db-latency-value db-latency-value--${lClass}`}>
+                    {isOk && latency !== null ? latency : '—'}
+                  </span>
+                  {isOk && latency !== null && (
+                    <span className="db-latency-unit">ms</span>
+                  )}
+                </div>
+                <div className="db-latency-label">round-trip latency</div>
+              </div>
+
+              <span className={`db-status-word db-status-word--${isOk ? 'ok' : 'error'}`}>
+                {isOk ? 'healthy' : 'error'}
               </span>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 0, marginTop: '0.5rem' }}>
+            <div className="db-table">
               {[
-                { key: 'Region',      val: data.region },
-                { key: 'Status',      val: data.db,        ok: isOk },
-                { key: 'App version', val: data.version },
-                { key: 'Checked at',  val: new Date(data.timestamp).toLocaleTimeString() },
+                { key: 'Endpoint', val: data.endpoint || '—' },
+                { key: 'Region',   val: data.region   || '—' },
+                { key: 'Status',   val: data.db,        ok: isOk },
+                { key: 'Version',  val: data.version  || '—' },
+                { key: 'Checked',  val: new Date(data.timestamp).toLocaleTimeString() },
               ].map(({ key, val, ok }) => (
-                <div key={key} className="dr-detail-row">
-                  <span className="dr-detail-key">{key}</span>
-                  <span className={`dr-detail-val${ok ? ' dr-detail-val--ok' : ''}`}>{val}</span>
+                <div key={key} className="db-row">
+                  <span className="db-key">{key}</span>
+                  <span className={`db-val${ok ? ' db-val--ok' : ''}`}>{val}</span>
                 </div>
               ))}
             </div>
 
-            {!isOk && (
-              <p style={{
-                fontFamily: 'var(--mono)',
-                fontSize: '0.65rem',
-                color: 'var(--danger)',
-                marginTop: '0.5rem',
-                lineHeight: 1.5,
-              }}>
-                No DATABASE_URL configured — set it to point to the primary RDS endpoint
-                (or the DR endpoint after failover).
-              </p>
+            {!isOk && data.error && (
+              <p className="db-error-msg">{data.error}</p>
             )}
           </>
         )}

@@ -8,6 +8,11 @@ const ecr = new ECRClient({ region: REGION })
 
 const SKIP_TAGS = new Set(['latest', 'stable'])
 
+// Cosign signature images have tags like sha256-<digest> — skip them
+function isCoSign(img) {
+  return img.imageTags?.every(t => /^sha256-/.test(t))
+}
+
 function sha(img) {
   return img.imageTags?.find(t => !SKIP_TAGS.has(t)) || img.imageTags?.[0] || img.imageDigest.slice(7, 15)
 }
@@ -42,8 +47,9 @@ router.get('/', async (_req, res) => {
     )
 
     const recent = imageDetails
+      .filter(img => !isCoSign(img))
       .sort((a, b) => new Date(b.imagePushedAt) - new Date(a.imagePushedAt))
-      .slice(0, 5)
+      .slice(0, 50)
 
     const builds = await Promise.all(
       recent.map(async (img) => {

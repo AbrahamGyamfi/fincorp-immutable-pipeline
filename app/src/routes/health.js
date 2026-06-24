@@ -19,7 +19,9 @@ router.get('/', async (_req, res) => {
       timestamp: new Date().toISOString(),
     })
   } catch (err) {
-    res.status(503).json({
+    // Return 200 so the dashboard can read the error body.
+    // CI/CD health check matches on '"status":"healthy"' — this body won't match, so deploys still fail correctly.
+    res.json({
       status: 'unhealthy',
       db: 'disconnected',
       error: err.message,

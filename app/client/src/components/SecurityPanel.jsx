@@ -1,13 +1,12 @@
 import { usePolling } from '../hooks/usePolling'
 
-const SEV_ORDER = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'INFORMATIONAL']
-const SEV_CLASS = {
-  CRITICAL:      'sev--critical',
-  HIGH:          'sev--high',
-  MEDIUM:        'sev--medium',
-  LOW:           'sev--low',
-  INFORMATIONAL: 'sev--info',
-}
+const SEVS = [
+  { key: 'CRITICAL',      cls: 'critical', short: 'Crit' },
+  { key: 'HIGH',          cls: 'high',     short: 'High' },
+  { key: 'MEDIUM',        cls: 'medium',   short: 'Med'  },
+  { key: 'LOW',           cls: 'low',      short: 'Low'  },
+  { key: 'INFORMATIONAL', cls: 'info',     short: 'Info' },
+]
 
 export default function SecurityPanel() {
   const { data, error, loading } = usePolling('/api/security')
@@ -25,40 +24,55 @@ export default function SecurityPanel() {
 
       <div className="panel-body">
         {loading && <p className="state-msg">Fetching scan results…</p>}
-        {error   && <p className="state-msg state-msg--error">Error: {error}</p>}
+        {error   && <p className="state-msg state-msg--error">{error}</p>}
 
         {data && (
           <>
-            <p style={{ fontFamily: 'var(--mono)', fontSize: '0.65rem', color: 'var(--text-dim)' }}>
-              Image: <span style={{ color: 'var(--accent)' }}>{data.image_tag}</span>
-              {' · '}
-              Scanned {new Date(data.scanned_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-            </p>
-
-            <div className="severity-grid">
-              {SEV_ORDER.map((sev) => (
-                <div key={sev} className="sev-cell">
-                  <span className={`sev-value ${SEV_CLASS[sev]}`}>
-                    {data.counts[sev] ?? 0}
-                  </span>
-                  <span className="sev-label">{sev.slice(0, 4)}</span>
-                </div>
-              ))}
+            <div className="sev-row">
+              {SEVS.map(({ key, cls, short }) => {
+                const n = data.counts?.[key] ?? 0
+                return (
+                  <div key={key} className={`sev-cell sev-cell--${cls}`}>
+                    <span className={`sev-count sev-count--${n === 0 ? 'zero' : cls}`}>
+                      {n}
+                    </span>
+                    <span className="sev-label">{short}</span>
+                  </div>
+                )
+              })}
             </div>
 
-            {data.findings.length > 0 && (
-              <>
-                <p style={{ fontFamily: 'var(--mono)', fontSize: '0.6rem', color: 'var(--text-dim)', marginTop: '0.25rem' }}>
-                  Medium findings (gate did not block these)
-                </p>
-                {data.findings.map((f) => (
+            <p className="scan-meta">
+              Image{' '}
+              <span style={{ color: 'var(--accent)' }}>
+                {data.image_tag?.slice(0, 12)}
+              </span>
+              {' · '}
+              Scanned{' '}
+              {new Date(data.scanned_at).toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </p>
+
+            {data.findings?.length > 0 && (
+              <div className="finding-list">
+                {data.findings.map(f => (
                   <div key={f.id} className="finding-row">
                     <span className="finding-id">{f.id}</span>
-                    <span className="finding-package">{f.package} {f.version}</span>
-                    <span className="finding-fix">fix: {f.fixed_in}</span>
+                    <span className="finding-pkg">
+                      {f.package} {f.version}
+                    </span>
+                    <span className="finding-fix">→ {f.fixed_in}</span>
                   </div>
                 ))}
-              </>
+              </div>
+            )}
+
+            {data.findings?.length === 0 && (
+              <p className="state-msg" style={{ paddingTop: 0, textAlign: 'left' }}>
+                No open findings.
+              </p>
             )}
           </>
         )}
