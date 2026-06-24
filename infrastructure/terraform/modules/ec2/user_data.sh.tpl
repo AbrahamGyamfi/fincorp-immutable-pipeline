@@ -27,16 +27,16 @@ EOF
 chmod +x /usr/local/bin/ecr-login.sh
 
 # Deploy script — triggered by SSM parameter written by CI/CD pipeline.
-# Cron runs every minute to check; actual docker pull only happens when
-# /fincorp/deploy-trigger SHA differs from last deployed SHA.
-cat > /usr/local/bin/fincorp-deploy.sh << 'EOF'
+# Cron runs every minute; docker pull only happens when SHA changes.
+# All env vars are hardcoded here (Terraform substitutes them at provision time)
+# so we never need to re-read them from docker inspect with eval — that
+# approach was broken because bash expanded $ecure inside the eval context.
+cat > /usr/local/bin/fincorp-deploy.sh << 'DEPLOY_EOF'
 #!/bin/bash
 LOG=/var/log/fincorp-deploy.log
 LAST_SHA_FILE=/var/lib/fincorp/last-deployed-sha
-REGISTRY="${ecr_registry}"
-IMAGE="$REGISTRY/${ecr_repository}:stable"
+IMAGE="${ecr_registry}/${ecr_repository}:stable"
 
-# Read deploy trigger written by pipeline sign-and-promote job
 TRIGGER_SHA=$(aws ssm get-parameter \
   --name /fincorp/deploy-trigger \
   --region ${aws_region} \
@@ -51,21 +51,41 @@ fi
 
 echo "$(date): new deploy trigger $TRIGGER_SHA (was: $LAST_SHA)" >> $LOG
 
-/usr/local/bin/ecr-login.sh >> $LOG 2>&1 || exit 0
+/usr/local/bin/ecr-login.sh >> $LOG 2>&1
+if [ $? -ne 0 ]; then
+  echo "$(date): ECR login failed — aborting" >> $LOG
+  exit 1
+fi
 
 PULL=$(docker pull "$IMAGE" 2>&1)
 echo "$(date): $PULL" >> $LOG
 
-ENV=$(docker inspect fincorp-api \
-      -f '{{range .Config.Env}}-e "{{.}}" {{end}}' 2>/dev/null || echo "")
 docker stop  fincorp-api 2>/dev/null || true
 docker rm    fincorp-api 2>/dev/null || true
-eval docker run -d --name fincorp-api --restart always \
-  -p 3000:3000 $ENV "$IMAGE" >> $LOG 2>&1
 
-echo "$TRIGGER_SHA" > "$LAST_SHA_FILE"
-echo "$(date): deployed $TRIGGER_SHA" >> $LOG
-EOF
+docker run -d \
+  --name fincorp-api \
+  --restart always \
+  -p 3000:3000 \
+  -e NODE_ENV=production \
+  -e PORT=3000 \
+  -e AWS_REGION=${aws_region} \
+  -e DR_REGION=${dr_region} \
+  -e ECR_REGISTRY=${ecr_registry} \
+  -e ECR_REPOSITORY=${ecr_repository} \
+  -e PRIMARY_DB_ID=${primary_db_id} \
+  -e DATABASE_URL='${database_url}' \
+  -e CODEARTIFACT_DOMAIN=${codeartifact_domain} \
+  -e CODEARTIFACT_DOMAIN_OWNER=${codeartifact_domain_owner} \
+  "$IMAGE" >> $LOG 2>&1
+
+if [ $? -eq 0 ]; then
+  echo "$TRIGGER_SHA" > "$LAST_SHA_FILE"
+  echo "$(date): successfully deployed $TRIGGER_SHA" >> $LOG
+else
+  echo "$(date): docker run FAILED for $TRIGGER_SHA" >> $LOG
+fi
+DEPLOY_EOF
 chmod +x /usr/local/bin/fincorp-deploy.sh
 
 # Cron: poll SSM trigger every minute (cheap — only pulls when SHA changes)

@@ -153,3 +153,17 @@ resource "aws_instance" "app" {
 
   tags = { Name = "${var.name_prefix}-app" }
 }
+
+# ── Elastic IP (stable address across instance replacements) ──────────────────
+
+resource "aws_eip" "app" {
+  provider = aws.primary
+  domain   = "vpc"
+  tags     = { Name = "${var.name_prefix}-eip" }
+}
+
+resource "aws_eip_association" "app" {
+  provider      = aws.primary
+  instance_id   = aws_instance.app.id
+  allocation_id = aws_eip.app.id
+}
